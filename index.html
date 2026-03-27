@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cafe Worker Tablet App</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="header">
+    <h1>&#9749; Cafe Worker App</h1>
+    <button class="gear-btn" id="gearBtn" title="Admin Panel">&#9881;&#65039;</button>
+</div>
+
+<div id="mainScreen" class="screen active">
+    <div class="main-layout">
+        <div class="menu-container" id="menuContent"></div>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                Active Orders <span class="sidebar-badge" id="sidebarBadge">0</span>
+            </div>
+            <div class="sidebar-orders" id="sidebarOrders">
+                <div class="empty-state-sm">No active orders</div>
+            </div>
+        </div>
+    </div>
+    <button class="view-order-btn" id="viewOrderBtn">
+        View Order <span class="badge" id="orderBadge">0</span>
+    </button>
+</div>
+
+<div id="customScreen" class="screen">
+    <div class="centered-screen">
+        <h2 id="customTitle"></h2>
+        <p>Add extras (decaf, no sugar...)</p>
+        <input type="text" id="customInput" placeholder="Type here...">
+        <div class="btn-row">
+            <button class="btn btn-primary" id="btnAddToOrder">Add to Order</button>
+            <button class="btn btn-secondary" id="btnCustomCancel">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="orderScreen" class="screen">
+    <div class="receipt-container">
+        <div class="receipt" id="receiptContent"></div>
+        <div class="receipt-actions">
+            <button class="btn btn-primary" id="btnDone">Done</button>
+            <button class="btn btn-secondary" id="btnAddMore">Add More</button>
+        </div>
+    </div>
+</div>
+
+<div id="nameScreen" class="screen">
+    <div class="centered-screen">
+        <h2>Name?</h2>
+        <input type="text" id="nameInput" placeholder="Customer name...">
+        <div class="btn-row">
+            <button class="btn btn-primary" id="btnNameDone">Continue</button>
+            <button class="btn btn-secondary" id="btnNameCancel">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="adminScreen" class="screen">
+    <div class="admin-container">
+        <div class="admin-section">
+            <h3>Categories</h3>
+            <div id="adminCategoryList"></div>
+            <div class="admin-add-row">
+                <input type="text" id="newCategoryName" placeholder="New category name...">
+                <button class="btn btn-primary btn-small" id="btnAddCategory">Add</button>
+            </div>
+        </div>
+        <div class="admin-section">
+            <h3>Items</h3>
+            <div id="adminItemList"></div>
+            <div class="admin-add-item-wrap">
+                <button class="btn btn-primary btn-small" id="btnAddItem">+ Add Item</button>
+            </div>
+        </div>
+        <div class="admin-section">
+            <h3>Data</h3>
+            <div class="admin-data-actions">
+                <button class="btn btn-secondary btn-small" id="btnBackup">Backup Data</button>
+                <button class="btn btn-secondary btn-small" id="btnRestore">Restore Data</button>
+
+                <input type="file" id="restoreFileInput" accept=".json" style="display:none">
+            </div>
+        </div>
+        <div class="admin-back-wrap">
+            <button class="btn btn-secondary" id="btnBackToCashier">&#8592; Back to Cashier</button>
+        </div>
+    </div>
+</div>
+
+<div id="editorScreen" class="screen">
+    <div class="editor-container">
+        <h2 id="editorTitle">Add Item</h2>
+        <div class="form-group">
+            <label>Name *</label>
+            <input type="text" id="editorName" placeholder="Item name">
+        </div>
+        <div class="form-group">
+            <label>Category *</label>
+            <select id="editorCategory"></select>
+        </div>
+        <div class="form-group">
+            <label>Price (optional)</label>
+            <input type="number" id="editorPrice" placeholder="Leave empty for no price" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+            <label>Image URL (optional)</label>
+            <input type="text" id="editorImageUrl" placeholder="https://...">
+            <div class="image-preview" id="editorImagePreview">
+                <span class="placeholder">&#9749;</span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Sale % (optional)</label>
+            <input type="number" id="editorSale" placeholder="e.g. 10 for 10% off" min="1" max="99" step="1">
+        </div>
+        <div class="error-msg" id="editorError"></div>
+        <div class="btn-row">
+            <button class="btn btn-primary" id="btnSaveItem">Save</button>
+            <button class="btn btn-secondary" id="btnEditorCancel">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="overlay">Waiting for payment...</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
