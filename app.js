@@ -414,14 +414,43 @@ function renderSidebar() {
     container.innerHTML = html;
 }
 
+function playBellChime() {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+    notes.forEach(function(freq, i) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        var start = ctx.currentTime + i * 0.18;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.35, start + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 1.2);
+        osc.start(start);
+        osc.stop(start + 1.2);
+    });
+}
+
+function getFinishSoundEnabled() {
+    return localStorage.getItem('finish_sound') !== 'off';
+}
+
+function setFinishSoundEnabled(val) {
+    localStorage.setItem('finish_sound', val ? 'on' : 'off');
+}
+
 function completeActiveOrder(orderId) {
     activeOrders = activeOrders.filter(function(o) { return o.id !== orderId; });
+    if (getFinishSoundEnabled()) playBellChime();
     renderSidebar();
 }
 
 function renderAdmin() {
     renderAdminCategories();
     renderAdminItems();
+    renderFinishSoundBtn();
 }
 
 function renderAdminCategories() {
@@ -830,6 +859,18 @@ document.getElementById('restoreFileInput').addEventListener('change', function(
 
 document.getElementById('btnBackToCashier').addEventListener('click', function() {
     showScreen('mainScreen');
+});
+
+function renderFinishSoundBtn() {
+    var btn = document.getElementById('btnFinishSound');
+    var enabled = getFinishSoundEnabled();
+    btn.textContent = 'Finish Sound: ' + (enabled ? 'ON' : 'OFF');
+    btn.className = 'btn btn-small ' + (enabled ? 'btn-primary' : 'btn-secondary');
+}
+
+document.getElementById('btnFinishSound').addEventListener('click', function() {
+    setFinishSoundEnabled(!getFinishSoundEnabled());
+    renderFinishSoundBtn();
 });
 
 document.getElementById('btnSaveItem').addEventListener('click', function() {
