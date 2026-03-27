@@ -112,6 +112,7 @@ function renderMenu() {
         for (var ii = 0; ii < catItems.length; ii++) {
             var item = catItems[ii];
             var salePct = item.sale != null ? item.sale : null;
+            var oos = item.outOfStock === true;
             var priceStr = '';
             if (item.price != null) {
                 if (salePct !== null) {
@@ -125,13 +126,16 @@ function renderMenu() {
             var imgHtml = item.imageUrl
                 ? '<img src="' + esc(item.imageUrl) + '"><div class="chip-placeholder hidden">\u2615</div>'
                 : '<div class="chip-placeholder">\u2615</div>';
-            html += '<button class="chip' + (salePct !== null ? ' chip-on-sale' : '') + '" data-action="select-item" data-item-id="' + item.id + '">'
+            var classes = 'chip' + (salePct !== null ? ' chip-on-sale' : '') + (oos ? ' chip-oos' : '');
+            var action = oos ? '' : 'data-action="select-item" data-item-id="' + item.id + '"';
+            html += '<button class="' + classes + '" ' + action + (oos ? ' disabled' : '') + '>'
                 + imgHtml
                 + '<div class="chip-info">'
                 + '<div class="chip-name">' + esc(item.name) + '</div>'
                 + priceStr
                 + '</div>'
                 + saleBadge
+                + (oos ? '<div class="chip-oos-label">Out of Stock</div>' : '')
                 + '</button>';
         }
         html += '</div>';
@@ -517,16 +521,18 @@ function renderAdminItems() {
             var item = catItems[ii];
             var priceStr = item.price != null ? '\u20AA' + item.price : 'No price';
             var saleBadge = item.sale != null ? '<span class="admin-sale-badge">-' + item.sale + '%</span>' : '';
+            var oos = item.outOfStock === true;
             var imgHtml = item.imageUrl
                 ? '<img src="' + esc(item.imageUrl) + '">'
                 : '';
-            html += '<div class="admin-list-item">'
+            html += '<div class="admin-list-item' + (oos ? ' admin-item-oos' : '') + '">'
                 + imgHtml
                 + '<div class="item-info">'
                 + '<div class="item-name">' + esc(item.name) + ' ' + saleBadge + '</div>'
-                + '<div class="item-detail">' + priceStr + '</div>'
+                + '<div class="item-detail">' + priceStr + (oos ? ' \u2014 <span class="admin-oos-text">Out of stock</span>' : '') + '</div>'
                 + '</div>'
                 + '<div class="admin-actions">'
+                + '<button class="admin-icon-btn' + (oos ? ' oos-active' : '') + '" data-action="toggle-stock" data-item-id="' + item.id + '" title="' + (oos ? 'Mark in stock' : 'Mark out of stock') + '">' + (oos ? '\u2705' : '\u274C') + '</button>'
                 + '<button class="admin-icon-btn" data-action="edit-item" data-item-id="' + item.id + '" title="Edit">\u270F\uFE0F</button>'
                 + '<button class="admin-icon-btn danger" data-action="delete-item" data-item-id="' + item.id + '" title="Delete">\uD83D\uDDD1\uFE0F</button>'
                 + '</div>'
@@ -544,12 +550,14 @@ function renderAdminItems() {
             var uitem = uncategorized[ui];
             var upriceStr = uitem.price != null ? '\u20AA' + uitem.price : 'No price';
             var usaleBadge = uitem.sale != null ? '<span class="admin-sale-badge">-' + uitem.sale + '%</span>' : '';
-            html += '<div class="admin-list-item">'
+            var uoos = uitem.outOfStock === true;
+            html += '<div class="admin-list-item' + (uoos ? ' admin-item-oos' : '') + '">'
                 + '<div class="item-info">'
                 + '<div class="item-name">' + esc(uitem.name) + ' ' + usaleBadge + '</div>'
-                + '<div class="item-detail">' + upriceStr + '</div>'
+                + '<div class="item-detail">' + upriceStr + (uoos ? ' \u2014 <span class="admin-oos-text">Out of stock</span>' : '') + '</div>'
                 + '</div>'
                 + '<div class="admin-actions">'
+                + '<button class="admin-icon-btn' + (uoos ? ' oos-active' : '') + '" data-action="toggle-stock" data-item-id="' + uitem.id + '" title="' + (uoos ? 'Mark in stock' : 'Mark out of stock') + '">' + (uoos ? '\u2705' : '\u274C') + '</button>'
                 + '<button class="admin-icon-btn" data-action="edit-item" data-item-id="' + uitem.id + '" title="Edit">\u270F\uFE0F</button>'
                 + '<button class="admin-icon-btn danger" data-action="delete-item" data-item-id="' + uitem.id + '" title="Delete">\uD83D\uDDD1\uFE0F</button>'
                 + '</div>'
@@ -684,6 +692,16 @@ function saveItem() {
     saveItems(items);
     editingItemId = null;
     showScreen('adminScreen');
+}
+
+function toggleStock(itemId) {
+    var items = loadItems() || [];
+    var item = items.find(function(i) { return i.id === itemId; });
+    if (item) {
+        item.outOfStock = !item.outOfStock;
+        saveItems(items);
+        renderAdminItems();
+    }
 }
 
 function deleteItem(itemId) {
@@ -852,7 +870,9 @@ document.getElementById('adminItemList').addEventListener('click', function(e) {
     var target = findAction(e.target);
     if (!target) return;
     var action = target.dataset.action;
-    if (action === 'edit-item') {
+    if (action === 'toggle-stock') {
+        toggleStock(target.dataset.itemId);
+    } else if (action === 'edit-item') {
         openItemEditor(target.dataset.itemId);
     } else if (action === 'delete-item') {
         deleteItem(target.dataset.itemId);

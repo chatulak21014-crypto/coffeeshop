@@ -527,6 +527,43 @@ body {
     margin-right: 2px;
 }
 
+.chip-oos {
+    opacity: 0.75;
+    cursor: not-allowed;
+    position: relative;
+    background: #ffebee;
+    border: 2px solid #e53935;
+}
+
+.chip-oos-label {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #e53935;
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    font-family: Arial, sans-serif;
+}
+
+.admin-item-oos {
+    opacity: 0.55;
+}
+
+.admin-oos-text {
+    color: #e53935;
+    font-weight: 600;
+}
+
+.admin-icon-btn.oos-active {
+    background: #ffebee;
+    border-color: #e53935;
+}
+
 .admin-sale-badge {
     display: inline-block;
     background: #ff7043;
