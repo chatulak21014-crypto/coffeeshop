@@ -213,28 +213,31 @@ function renderReceipt() {
     } else {
         for (var gi = 0; gi < groups.length; gi++) {
             var g = groups[gi];
-            var isFree = freeGroups[gi] === true;
+            var freeCount = freeGroups[gi] || 0;
+            var paidQty = g.qty - freeCount;
             var hasPrice = g.price != null && g.price > 0;
             var effectiveUnitPrice = (hasPrice && g.sale != null) ? g.price * (1 - g.sale / 100) : g.price;
-            var lineTotal = hasPrice ? effectiveUnitPrice * g.qty : null;
 
             var priceStr = '';
             if (hasPrice) {
-                if (isFree) {
+                if (freeCount >= g.qty) {
                     priceStr = '<s class="free-price">\u20AA' + (effectiveUnitPrice * g.qty).toFixed(2) + '</s> FREE';
+                } else if (freeCount > 0) {
+                    priceStr = '\u20AA' + (effectiveUnitPrice * paidQty).toFixed(2) + ' <span class="receipt-partial-free">(' + freeCount + ' free)</span>';
                 } else if (g.sale != null) {
-                    priceStr = '<s class="sale-orig-price">\u20AA' + (g.price * g.qty).toFixed(2) + '</s> \u20AA' + lineTotal.toFixed(2);
+                    priceStr = '<s class="sale-orig-price">\u20AA' + (g.price * g.qty).toFixed(2) + '</s> \u20AA' + (effectiveUnitPrice * g.qty).toFixed(2);
                 } else {
-                    priceStr = '\u20AA' + lineTotal.toFixed(2);
+                    priceStr = '\u20AA' + (effectiveUnitPrice * g.qty).toFixed(2);
                 }
             }
 
-            var saleTag = (hasPrice && g.sale != null && !isFree)
+            var saleTag = (hasPrice && g.sale != null && freeCount === 0)
                 ? '<span class="receipt-sale-tag">-' + g.sale + '%</span>'
                 : '';
 
+            var freeBtnLabel = freeCount > 0 ? '\u2713 Free \u00D7' + freeCount : 'Free';
             var freeBtn = hasPrice
-                ? '<button class="receipt-free-btn' + (isFree ? ' active' : '') + '" data-action="toggle-free" data-group-index="' + gi + '">' + (isFree ? '\u2713 Free' : 'Free') + '</button>'
+                ? '<button class="receipt-free-btn' + (freeCount > 0 ? ' active' : '') + '" data-action="toggle-free" data-group-index="' + gi + '">' + freeBtnLabel + '</button>'
                 : '';
             html += '<div class="receipt-line">'
                 + '<span class="receipt-line-left">' + g.qty + 'x ' + esc(g.name) + saleTag + '</span>'
@@ -250,9 +253,12 @@ function renderReceipt() {
         var hasAnyPrice = groups.some(function(g) { return g.price != null; });
         if (hasAnyPrice) {
             var total = groups.reduce(function(sum, g, i) {
-                if (g.price == null || freeGroups[i]) return sum;
+                if (g.price == null) return sum;
+                var fc = freeGroups[i] || 0;
+                var paid = g.qty - fc;
+                if (paid <= 0) return sum;
                 var u = (g.sale != null) ? g.price * (1 - g.sale / 100) : g.price;
-                return sum + u * g.qty;
+                return sum + u * paid;
             }, 0);
             html += '<hr class="receipt-divider">';
             html += '<div class="receipt-total"><span>TOTAL</span><span>\u20AA' + total.toFixed(2) + '</span></div>';
@@ -288,18 +294,22 @@ function removeOrderGroup(groupIndex) {
 function completeOrder(customerName) {
     if (orders.length === 0) return;
     var groups = getGroupedOrders();
-    var freeItemKeys = {};
+    var freeCountMap = {};
     for (var gi = 0; gi < groups.length; gi++) {
-        if (freeGroups[gi]) {
-            freeItemKeys[groups[gi].itemId + '||' + groups[gi].note] = true;
+        if (freeGroups[gi] > 0) {
+            freeCountMap[groups[gi].itemId + '||' + groups[gi].note] = freeGroups[gi];
         }
     }
+    var freeUsed = {};
     var snapshot = [];
     for (var i = 0; i < orders.length; i++) {
         var o = orders[i];
         var key = o.itemId + '||' + o.note;
-        var isFree = freeItemKeys[key];
-        var effectivePrice = isFree ? null : o.price;
+        var freeCnt = freeCountMap[key] || 0;
+        var used = freeUsed[key] || 0;
+        var isFreeItem = used < freeCnt;
+        freeUsed[key] = used + 1;
+        var effectivePrice = isFreeItem ? null : o.price;
         if (effectivePrice !== null && o.sale != null) {
             effectivePrice = parseFloat((effectivePrice * (1 - o.sale / 100)).toFixed(2));
         }
@@ -846,7 +856,10 @@ document.getElementById('receiptContent').addEventListener('click', function(e) 
         removeOrderGroup(parseInt(target.dataset.groupIndex, 10));
     } else if (target.dataset.action === 'toggle-free') {
         var idx = parseInt(target.dataset.groupIndex, 10);
-        freeGroups[idx] = !freeGroups[idx];
+        var groups = getGroupedOrders();
+        var maxQty = groups[idx] ? groups[idx].qty : 1;
+        var current = freeGroups[idx] || 0;
+        freeGroups[idx] = current + 1 > maxQty ? 0 : current + 1;
         renderReceipt();
     }
 });
