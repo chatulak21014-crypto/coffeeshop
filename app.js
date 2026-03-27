@@ -168,6 +168,7 @@ function selectItem(itemId) {
     currentItemId = itemId;
     document.getElementById('customTitle').textContent = item.name;
     document.getElementById('customInput').value = '';
+    document.getElementById('customPriceExtra').value = '';
     showScreen('customScreen');
 }
 
@@ -176,10 +177,12 @@ function addToOrder() {
     var item = data.items.find(function(i) { return i.id === currentItemId; });
     if (!item) return;
     var note = document.getElementById('customInput').value.trim();
+    var extraPrice = parseFloat(document.getElementById('customPriceExtra').value) || 0;
+    var finalPrice = item.price != null ? item.price + extraPrice : (extraPrice > 0 ? extraPrice : null);
     orders.push({
         itemId: item.id,
         name: item.name,
-        price: item.price,
+        price: finalPrice,
         sale: item.sale != null ? item.sale : null,
         note: note
     });
